@@ -1,13 +1,15 @@
 from playwright.sync_api import Page
 
 class BasePage:
-    def __init__(self, page: Page, base_url: str = "https://automationintesting.online"):
-        self.page = page
-        self.base_url = base_url
+    def __init__(self, page: Page) -> None:
+        self.page: Page = page
+        self.base_url: str = "https://automationintesting.online/"
 
-    def goto(self, path: str = ""):
-        url = self.base_url + path
-        self.page.goto(url)
+    def scroll_to_bottom(self) -> None:
+        self.page.evaluate("() => window.scrollBy(0, document.body.scrollHeight)")
 
-    def scroll_fraction(self, fraction: float = 0.33):
-        self.page.evaluate("(fraction) => { window.scrollTo(0, document.body.scrollHeight * fraction); }", fraction)
+    def scroll_to_top(self) -> None:
+        self.page.evaluate("() => window.scrollTo(0, 0)")
+
+    def scroll_to_one_third(self) -> None:
+        self.page.evaluate("() => window.scrollBy(0, document.body.scrollHeight / 3)")

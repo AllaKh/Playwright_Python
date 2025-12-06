@@ -1,6 +1,6 @@
 {
-  "full_name": "John Smith",
-  "email": "john.smith@example.com",
-  "phone": "+1234567890",
-  "notes": "Automated booking test"
+  "first_name": "John",
+  "last_name": "Smith",
+  "email": "john.doe@example.com",
+  "phone": "123456789012"
 }

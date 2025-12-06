@@ -1,55 +1,81 @@
 import json
-from datetime import date, timedelta
+import random
+from datetime import date
 from pages.home_page import HomePage
 from pages.admin_page import AdminPage
 from pages.room_page import RoomPage
+from pages.admin_report_page import AdminReportPage
 from playwright.sync_api import Page
 
-def test_full_reservation_flow(page: Page):
-    home = HomePage(page)
-    admin = AdminPage(page)
-    room = RoomPage(page)
+def test_full_reservation_flow(page: Page) -> None:
+    """
+    Full reservation flow: book a room, verify booking in admin report, then logout.
+    """
+    home: HomePage = HomePage(page)
+    admin: AdminPage = AdminPage(page)
+    room: RoomPage = RoomPage(page)
+    report: AdminReportPage = AdminReportPage(page)
 
-    # Open home
+    # 1. Open home page
     home.open()
 
-    # Go to admin
+    # 2. Go to admin page
     home.go_admin()
-    assert "#/admin" in page.url
+    page.wait_for_url("**/admin", timeout=5000)
+    assert "/admin" in page.url
 
-    # Login
+    # 3. Login
     admin.login("admin", "password")
 
-    # Back to front page
+    # 4. Back to front page
     home.back_front()
+    home.page.wait_for_selector(home.second_room_link, timeout=5000)
 
-    # Check rooms heading
-    assert home.has_rooms_heading()
+    # 5. Scroll down 1/3
+    home.scroll_down_one_third()
 
-    # Scroll down 1/3
-    home.scroll_fraction(0.33)
-
-    # Open second room
+    # 6. Open second room
     home.open_second_room()
+    page.wait_for_url("**/reservation/**", timeout=5000)
+    assert "/reservation/" in page.url
 
-    # Verify room heading present
+    # 7. Wait until heading is visible
+    room.page.wait_for_selector(room.heading_selector, timeout=5000)
     assert room.has_heading()
 
-    # Choose dates: tomorrow and tomorrow +10
-    start = date.today() + timedelta(days=1)
-    end = start + timedelta(days=10)
-    page.evaluate("(s, e) => { const startInput = document.querySelector('input[name=start]'); const endInput = document.querySelector('input[name=end]'); if(startInput) startInput.value = s; if(endInput) endInput.value = e; }", start.isoformat(), end.isoformat())
+    # 8. Choose booking dates (random day in current month)
+    today = date.today()
+    start_day = random.randint(1, 28)
+    start_date = date(today.year, today.month, start_day)
+    end_date = date(today.year, today.month, min(start_day + 3, 28))
 
-    # Click reservation button
+    page.evaluate(
+        """(args) => {
+            const startInput = document.querySelector('input[name=start]');
+            const endInput = document.querySelector('input[name=end]');
+            if(startInput) startInput.value = args.start;
+            if(endInput) endInput.value = args.end;
+        }""",
+        arg={"start": start_date.isoformat(), "end": end_date.isoformat()}
+    )
+
+    # 9. Click "Make Reservation"
     room.open_reservation()
 
-    # Load payload
-    with open('payload.json', 'r', encoding='utf-8') as f:
+    # 10. Load booking payload
+    with open("payload.json", "r", encoding="utf-8") as f:
         payload = json.load(f)
 
-    # Fill and submit booking
+    # 11. Fill and submit booking form
     room.fill_booking_form(payload)
 
-    # Wait for confirmation
+    # 12. Wait a moment for confirmation
     page.wait_for_timeout(1000)
-    assert page.url.startswith("https://automationintesting.online")
+
+    # 13. Go to admin report
+    report.open()
+    full_name = f"{payload.get('first_name', '')} {payload.get('last_name', '')}"
+    assert report.find_booking_in_table(full_name), f"Booking for {full_name} not found in admin report"
+
+    # 14. Logout
+    report.logout()
