@@ -1,31 +1,50 @@
+import random
+from datetime import datetime, timedelta
 from playwright.sync_api import Page
-from .base_page import BasePage
 
+class RoomPage:
+    def __init__(self, page: Page):
+        self.page = page
+        self.heading_selector = "#root-container h1"
+        self.do_reservation_selector = "#doReservation"
 
-class RoomPage(BasePage):
-    heading_selector: str = "#root-container h1"
-    do_reservation: str = "#doReservation"
-
-    # Correct booking form selectors
-    booking_input_1: str = "#root-container > div > div.container.my-5 > div > div.col-lg-4 > div > div > form > div.input-group.mb-3.room-booking-form > input"  # First Name
-    booking_input_2: str = "#root-container > div > div.container.my-5 > div > div.col-lg-4 > div > div > form > div:nth-child(2) > input"  # Last Name
-    booking_input_3: str = "#root-container > div > div.container.my-5 > div > div.col-lg-4 > div > div > form > div:nth-child(3) > input"  # Email
-    booking_input_4: str = "#root-container > div > div.container.my-5 > div > div.col-lg-4 > div > div > form > div:nth-child(4) > input"  # Phone
-
-    submit_button: str = "#root-container > div > div.container.my-5 > div > div.col-lg-4 > div > div > form > button.btn.btn-primary.w-100.mb-3"
-
-    def __init__(self, page: Page) -> None:
-        super().__init__(page)
+        # Booking form inputs
+        self.first_name_input = "#root-container > div > div.container.my-5 > div > div.col-lg-4 > div > div > form > div.input-group.mb-3.room-booking-form > input"
+        self.last_name_input = "#root-container > div > div.container.my-5 > div > div.col-lg-4 > div > div > form > div:nth-child(2) > input"
+        self.email_input = "#root-container > div > div.container.my-5 > div > div.col-lg-4 > div > div > form > div:nth-child(3) > input"
+        self.phone_input = "#root-container > div > div.container.my-5 > div > div.col-lg-4 > div > div > form > div:nth-child(4) > input"
+        self.submit_button = "#root-container > div > div.container.my-5 > div > div.col-lg-4 > div > div > form > button.btn.btn-primary.w-100.mb-3"
 
     def has_heading(self) -> bool:
-        return self.page.is_visible(self.heading_selector)
+        return self.page.locator(self.heading_selector).is_visible()
 
-    def open_reservation(self) -> None:
-        self.page.click(self.do_reservation)
+    # ================= RANDOM DATES =================
+    def generate_random_dates(self):
+        """
+        Generate random check-in and check-out dates
+        """
+        offset = random.randint(0, 9)
+        checkin = datetime.now() + timedelta(days=offset)
+        checkout = checkin + timedelta(days=1)
+        return checkin.strftime("%Y-%m-%d"), checkout.strftime("%Y-%m-%d")
 
-    def fill_booking_form(self, payload: dict) -> None:
-        self.page.fill(self.booking_input_1, payload.get("first_name", ""))
-        self.page.fill(self.booking_input_2, payload.get("last_name", ""))
-        self.page.fill(self.booking_input_3, payload.get("email", ""))
-        self.page.fill(self.booking_input_4, payload.get("phone", ""))
-        self.page.click(self.submit_button)
+    def go_to_room_with_dates(self, room_id: int, checkin: str, checkout: str):
+        """
+        Navigate directly to reservation URL with dates
+        """
+        url = f"https://automationintesting.online/reservation/{room_id}?checkin={checkin}&checkout={checkout}"
+        self.page.goto(url)
+
+    # ================= RESERVATION =================
+    def open_reservation(self):
+        """
+        Click 'Make Reservation' button on sidebar
+        """
+        self.page.locator(self.do_reservation_selector).click()
+
+    def fill_booking_form(self, payload: dict):
+        self.page.locator(self.first_name_input).fill(payload.get("first_name", ""))
+        self.page.locator(self.last_name_input).fill(payload.get("last_name", ""))
+        self.page.locator(self.email_input).fill(payload.get("email", ""))
+        self.page.locator(self.phone_input).fill(payload.get("phone", ""))
+        self.page.locator(self.submit_button).click()
