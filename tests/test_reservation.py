@@ -1,6 +1,4 @@
 import json
-import random
-from datetime import date
 from pages.home_page import HomePage
 from pages.admin_page import AdminPage
 from pages.room_page import RoomPage
@@ -11,6 +9,7 @@ def test_full_reservation_flow(page: Page) -> None:
     """
     Full reservation flow: book a room, verify booking in admin report, then logout.
     """
+    # Initialize page objects
     home: HomePage = HomePage(page)
     admin: AdminPage = AdminPage(page)
     room: RoomPage = RoomPage(page)
@@ -43,21 +42,7 @@ def test_full_reservation_flow(page: Page) -> None:
     room.page.wait_for_selector(room.heading_selector, timeout=5000)
     assert room.has_heading()
 
-    # 8. Choose booking dates (random day in current month)
-    today = date.today()
-    start_day = random.randint(1, 28)
-    start_date = date(today.year, today.month, start_day)
-    end_date = date(today.year, today.month, min(start_day + 3, 28))
-
-    page.evaluate(
-        """(args) => {
-            const startInput = document.querySelector('input[name=start]');
-            const endInput = document.querySelector('input[name=end]');
-            if(startInput) startInput.value = args.start;
-            if(endInput) endInput.value = args.end;
-        }""",
-        arg={"start": start_date.isoformat(), "end": end_date.isoformat()}
-    )
+    # 8. Не трогаем даты, оставляем как есть
 
     # 9. Click "Make Reservation"
     room.open_reservation()
@@ -72,7 +57,7 @@ def test_full_reservation_flow(page: Page) -> None:
     # 12. Wait a moment for confirmation
     page.wait_for_timeout(1000)
 
-    # 13. Go to admin report
+    # 13. Go to admin report and check booking
     report.open()
     full_name = f"{payload.get('first_name', '')} {payload.get('last_name', '')}"
     assert report.find_booking_in_table(full_name), f"Booking for {full_name} not found in admin report"
