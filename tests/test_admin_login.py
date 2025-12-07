@@ -16,7 +16,7 @@ def test_admin_login_invalid_passwords(page: Page) -> None:
 
     # 2. Go to admin page
     home.go_admin()
-    page.wait_for_url("**/admin", timeout=5000)
+    page.wait_for_url("**/admin", timeout=1000)
     assert "/admin" in page.url
 
     # 3. Load invalid passwords payload
@@ -36,7 +36,7 @@ def test_admin_login_invalid_passwords(page: Page) -> None:
         page.wait_for_timeout(500)
 
         # Wait for the error element to appear
-        page.wait_for_selector(error_selector, timeout=3000)
+        page.wait_for_selector(error_selector, timeout=1000)
 
         # Check the error text
         error_text: str | None = page.text_content(error_selector)

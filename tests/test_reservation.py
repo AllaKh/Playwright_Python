@@ -20,7 +20,7 @@ def test_full_reservation_flow(page: Page) -> None:
 
     # 2. Go to admin page
     home.go_admin()
-    page.wait_for_url("**/admin", timeout=5000)
+    page.wait_for_url("**/admin", timeout=3000)
     assert "/admin" in page.url
 
     # 3. Login
@@ -28,18 +28,18 @@ def test_full_reservation_flow(page: Page) -> None:
 
     # 4. Back to front page
     home.back_front()
-    home.page.wait_for_selector(home.second_room_link, timeout=5000)
+    home.page.wait_for_selector(home.second_room_link, timeout=3000)
 
     # 5. Scroll down 1/3
     home.scroll_down_one_third()
 
     # 6. Open second room
     home.open_second_room()
-    page.wait_for_url("**/reservation/**", timeout=5000)
+    page.wait_for_url("**/reservation/**", timeout=3000)
     assert "/reservation/" in page.url
 
     # 7. Wait until heading is visible
-    room.page.wait_for_selector(room.heading_selector, timeout=5000)
+    room.page.wait_for_selector(room.heading_selector, timeout=3000)
     assert room.has_heading()
 
     # 8. Select random dates (JS-style)
@@ -48,7 +48,7 @@ def test_full_reservation_flow(page: Page) -> None:
     # Navigate to the reservation page with the generated dates
     room.go_to_room_with_dates(2, start, end)
 
-    page.wait_for_url("**/reservation/**", timeout=5000)
+    page.wait_for_url("**/reservation/**", timeout=3000)
     assert "/reservation/" in page.url
 
     # 9. Click "Make Reservation"
