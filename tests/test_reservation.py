@@ -42,7 +42,7 @@ def test_full_reservation_flow(page: Page) -> None:
     room.page.wait_for_selector(room.heading_selector, timeout=3000)
     assert room.has_heading()
 
-    # 8. Select random dates (JS-style)
+    # 8. Select random dates
     start, end = room.generate_random_dates()
 
     # Navigate to the reservation page with the generated dates
